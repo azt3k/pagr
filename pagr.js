@@ -7,9 +7,11 @@
     "use strict";
 
     var pluginName = "pagr",
+        pluginVersion = "0.1.1",
         defaults = {
             loadingSelector: 'html',
             pageLinkSelector: '.page-link',
+            filterFormSelector: null,
             pager: {
                 class: 'page-link',
                 next: true,
@@ -22,10 +24,11 @@
             ajax: false,
             method: 'get', // get / post
             behaviour: 'replace', // append / replace
-            direction: 'asc', // asc / desc
             vars: {
-                page: "page",
-                pageSize: "page_size"
+                sortDirection: 'direction',
+                sortBy: 'sort',
+                page: 'page',
+                pageSize: 'page_size'
             },
             baseURL: window.location.href,
             pageSize: 10,
@@ -61,9 +64,6 @@
                 }
                 $elem.attr('id', id);
             }
-
-            // check if we have overrides
-            if ($elem.attr('data-size')) conf.pageSize = parseInt($elem.attr('data-size'));
 
             // validate conf
             if (['get','post'].indexOf(conf.method) == -1) throw "invalid request method supplied";
@@ -102,85 +102,136 @@
 
                 var $this = $(this);
 
-                $this.off('tap.pagr, click.pagr').on('tap.pagr, click.pagr', function(e) {
-
-                    // vars
-                    var url = conf.baseURL,
-                        currentPage = self.currentPage(),
-                        page = $this.attr('data-page') ? $this.attr('data-page') : 1,
-                        pageSize = conf.pageSize,
-                        total = self.getTotal(),
-                        max = Math.ceil(total / pageSize),
-                        qs = {},
-                        to;
+                $this.off('tap.pagr').off('click.pagr').on('tap.pagr, click.pagr', function(e) {
 
                     // prevent default
                     e.preventDefault();
 
+                    // do nothing of the item is disabled
+                    if ($this.is('.disabled')) return;
+
                     // callback
-                    if (typeof conf.onBeforePage == 'function') conf.onBeforePage();
+                    if (typeof conf.onBeforePage == 'function') conf.onBeforePage(self);
 
-                    // target page to load
-                    switch(page) {
+                    // vars
+                    var url = self.baseURL(),
+                        currentPage = self.currentPage(),
+                        pageJump = $this.attr('data-page') ? $this.attr('data-page') : 1,
+                        pageSize = self.pageSize(),
+                        sortDirection = self.sortDirection(),
+                        sortBy = self.sortBy(),
+                        total = self.getTotal(),
+                        max = self.getMax(),
+                        qs = {},
+                        to,
+                        $filterForm,
+                        serialised,
+                        item,
+                        i;
 
-                        case 'first':
-                            to = 1;
-                            break;
+                    if (!$(conf.loadingSelector).is('.loading')) {
 
-                        case 'next':
-                            to = currentPage + 1 > max ? max : currentPage + 1;
-                            break;
+                        // loading
+                        $(conf.loadingSelector).addClass('loading');
 
-                        case 'prev':
-                            to = currentPage - 1 < 1 ? 1 : currentPage - 1;
-                            break;
+                        // target page to load
+                        switch(pageJump) {
 
-                        case 'last':
-                            to = max;
-                            break;
+                            case 'first':
+                                to = 1;
+                                break;
 
-                        default:
-                            to = parseInt(page);
-                    }
+                            case 'next':
+                                to = currentPage + 1 > max ? max : currentPage + 1;
+                                break;
 
-                    // request
-                    if (conf.ajax) {
+                            case 'prev':
+                                to = currentPage - 1 < 1 ? 1 : currentPage - 1;
+                                break;
 
-                        // set page size vars
-                        qs[conf.vars.page] = to;
-                        qs[conf.vars.pageSize] = pageSize;
+                            case 'last':
+                                to = max;
+                                break;
 
-                        // generate the url
-                        url = typeof conf.urlHandler == 'function' ? conf.urlHandler(qs, url) : $.qs(qs, url);
+                            default:
+                                to = parseInt(pageJump);
+                        }
 
-                        $[conf.method](url, function(data, textStatus, jqXHR) {
-                            if (typeof conf.ajaxHandler == 'function') {
-                                conf.ajaxHandler(data, textStatus, jqXHR);
-                            }
-                            else {
-                                var $replacement = $($(data).find(self.selector)[self.idx]);
-                                if (conf.behaviour == 'append') {
-                                    $elem.append($replacement.children());
-                                } else {
-                                    $elem.html('').append($replacement.children());
+                        // request
+                        if (conf.ajax) {
+
+                            // set page size vars
+                            qs[conf.vars.page] = to;
+                            qs[conf.vars.pageSize] = pageSize;
+                            qs[conf.vars.sortBy] = sortBy;
+                            qs[conf.vars.sortDirection] = sortDirection;
+
+                            // extract the data from the filter form
+                            if ($filterForm = self.filterForm()) {
+                                serialised = $filterForm.serialize().split('&');
+                                for(i=0; i<serialised.length; i++) {
+                                    item = serialised[i].split('=');
+                                    qs[item[0]] = item[1];
                                 }
                             }
-                            $elem.attr('data-page', to);
-                            if (conf.forceFilter) self.filter();
-                            self.attachPagination();
-                        });
-                    } else {
-                        $elem.attr('data-page', to);
-                        self.filter();
-                        self.attachPagination();
-                    }
 
-                    // callback
-                    if (typeof conf.onAfterPage == 'function') conf.onAfterPage();
+                            // generate the url
+                            url = typeof conf.urlHandler == 'function' ? conf.urlHandler(qs, url) : $.qs(qs, url);
+
+                            $[conf.method](url, function(data, textStatus, jqXHR) {
+
+                                // handle response
+                                if (typeof conf.ajaxHandler == 'function') {
+                                    conf.ajaxHandler(data, textStatus, jqXHR);
+                                }
+                                else {
+                                    var $replacement = $($(data).find(self.selector)[self.idx]);
+                                    if (conf.behaviour == 'append') {
+                                        $elem.append($replacement.children());
+                                    } else {
+                                        $elem.html('').append($replacement.children());
+                                    }
+                                }
+
+                                // update meta data
+                                $elem.attr('data-page', to);
+                                if (conf.forceFilter) self.filter();
+                                self.attachPagination();
+
+                                // callback
+                                if (typeof conf.onAfterPage == 'function') conf.onAfterPage(self);
+
+                                // loading
+                                $(conf.loadingSelector).removeClass('loading');
+
+                            });
+                        } else {
+
+                            //  update meta data
+                            $elem.attr('data-page', to);
+                            self.filter();
+                            self.attachPagination();
+
+                            // callback
+                            if (typeof conf.onAfterPage == 'function') conf.onAfterPage(self);
+
+                            // loading
+                            $(conf.loadingSelector).removeClass('loading');
+                        }
+                    }
 
                 });
             });
 
+        },
+
+        getMax: function() {
+            return Math.ceil(this.getTotal() / this.pageSize());
+        },
+
+        appendedTotal: function() {
+            var $elem = this.$element;
+            return $elem.children().length;
         },
 
         getTotal: function() {
@@ -191,6 +242,38 @@
         currentPage: function() {
             var $elem = this.$element;
             return $elem.attr('data-page') ? parseInt($elem.attr('data-page')) : 1;
+        },
+
+        sortBy: function() {
+            var $elem = this.$element;
+            return $elem.attr('data-sort-by') ? $elem.attr('data-sort-by') : null;
+        },
+
+        sortDirection: function() {
+            var $elem = this.$element;
+            return $elem.attr('data-sort-direction') == 'desc' ? 'desc' : 'asc';
+        },
+
+        baseURL: function() {
+            var $elem = this.$element,
+                conf = this.settings;
+
+            return $elem.attr('data-base-url') ? $elem.attr('data-base-url') : conf.baseUrl;
+        },
+
+        pageSize: function() {
+            var $elem = this.$element,
+                conf = this.settings;
+
+            return $elem.attr('data-size') ? parseInt($elem.attr('data-size')) : conf.pageSize;
+        },
+
+        filterForm: function() {
+            var $elem = this.$element,
+                conf = this.settings,
+                $fallback = conf.filterFormSelector ? $(conf.filterFormSelector) : null;
+
+            return $elem.attr('data-filter-form') ? $($elem.attr('data-filter-form')) : $fallback;
         },
 
         getContainer: function() {
@@ -212,13 +295,13 @@
                 conf = this.settings,
                 $elem = this.$element,
                 id = $elem.attr('id'),
-                total = $elem.attr('data-total') ? parseInt($elem.attr('data-total')) : $elem.children().length,
+                total = this.getTotal(),
                 cls = conf.pager.class != undefined && conf.pager.class ? conf.pager.class : 'page-link',
-                max = Math.ceil(total / conf.pageSize);
+                max = this.getMax();
 
             pager = '<div id="' + id + '-wrap" class="pagr-wrap">' +
-                    (conf.pager.first ? '<a class="' + cls + '" data-page="first">First</a>' : '') +
-                    (conf.pager.prev ? '<a class="' + cls + '" data-page="prev">Prev</a>' : '');
+                    (conf.pager.first ? '<a class="' + cls + (currentPage == 1 ? ' disabled' : '') + '" data-page="first">First</a>' : '') +
+                    (conf.pager.prev  ? '<a class="' + cls + (currentPage == 1 ? ' disabled' : '') + '" data-page="prev">Prev</a>' : '');
 
             if (conf.pager.range) {
                 for (i = -conf.pager.range; i <= conf.pager.range; i++) {
@@ -227,8 +310,8 @@
                 }
             }
 
-            pager+= (conf.pager.next ? '<a class="' + cls + '" data-page="next">Next</a>' : '') +
-                    (conf.pager.last ? '<a class="' + cls + '" data-page="last">Last</a>' : '') +
+            pager+= (conf.pager.next ? '<a class="' + cls + (currentPage == max ? ' disabled' : '') + '" data-page="next">Next</a>' : '') +
+                    (conf.pager.last ? '<a class="' + cls + (currentPage == max ? ' disabled' : '') + '" data-page="last">Last</a>' : '') +
                     '</div>';
 
             return pager;
@@ -238,16 +321,17 @@
             var $elem = this.$element,
                 conf = this.settings,
                 total = this.getTotal(),
-                cur = this.currentPage();
+                cur = this.currentPage(),
+                pageSize = this.pageSize();
 
-            if (total > conf.pageSize) {
+            if (total > pageSize) {
                 $elem.children().each(function(idx) {
                     var $this = $(this);
                     if (conf.behaviour != 'append') {
-                        if (idx >= (conf.pageSize * (cur -1)) && idx < (conf.pageSize * cur)) $this.show();
+                        if (idx >= (pageSize * (cur -1)) && idx < (pageSize * cur)) $this.show();
                         else $this.hide();
                     } else {
-                        if (idx < (conf.pageSize * cur)) $this.show();
+                        if (idx < (pageSize * cur)) $this.show();
                         else $this.hide();
                     }
                 });
@@ -304,5 +388,4 @@
     };
 
 })(jQuery, window, document);
-
 
