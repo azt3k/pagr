@@ -1,0 +1,20 @@
+{
+  "name": "pagr",
+  "version": "0.1.0",
+  "repo": "azt3k/pagr",
+  "homepage": "https://github.com/azt3k/pagr",
+  "description": "A client site / ajax (backend agnostic) pagination system",
+  "keywords": [
+    "height",
+    "width",
+    "pagr",
+    "jquery"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "jquery": "~1.11.1"
+  },
+  "main": "pagr.js",
+  "development": {},
+  "ignore": []
+}
