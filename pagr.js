@@ -7,7 +7,7 @@
     "use strict";
 
     var pluginName = "pagr",
-        pluginVersion = "0.1.1",
+        pluginVersion = "0.1.2",
         defaults = {
             loadingSelector: 'html',
             pageLinkSelector: '.page-link',
@@ -265,7 +265,7 @@
             var $elem = this.$element,
                 conf = this.settings;
 
-            return $elem.attr('data-size') ? parseInt($elem.attr('data-size')) : conf.pageSize;
+            return $elem.attr('data-page-size') ? parseInt($elem.attr('data-page-size')) : conf.pageSize;
         },
 
         filterForm: function() {
@@ -388,4 +388,5 @@
     };
 
 })(jQuery, window, document);
+
 

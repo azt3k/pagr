@@ -35,6 +35,7 @@ $('#container').pagr();
 {
     loadingSelector: 'html',
     pageLinkSelector: '.page-link',
+    filterFormSelector: null,
     pager: {
         class: 'page-link',
         next: true,
@@ -47,10 +48,11 @@ $('#container').pagr();
     ajax: false,
     method: 'get', // get / post
     behaviour: 'replace', // append / replace
-    direction: 'asc', // asc / desc
     vars: {
-        page: "page",
-        pageSize: "page_size"
+        sortDirection: 'direction',
+        sortBy: 'sort',
+        page: 'page',
+        pageSize: 'page_size'
     },
     baseURL: window.location.href,
     pageSize: 10,
