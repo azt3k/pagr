@@ -7,7 +7,7 @@
     "use strict";
 
     var pluginName = "pagr",
-        pluginVersion = "0.1.2",
+        pluginVersion = "0.1.3",
         defaults = {
             loadingSelector: 'html',
             pageLinkSelector: '.page-link',
@@ -255,10 +255,17 @@
         },
 
         baseURL: function() {
-            var $elem = this.$element,
-                conf = this.settings;
 
-            return $elem.attr('data-base-url') ? $elem.attr('data-base-url') : conf.baseUrl;
+            var $elem = this.$element,
+                conf = this.settings,
+                val = $elem.attr('data-base-url');
+
+            // see if we have a base url defined on the parent (tablizr)
+            if (!val && $elem.parent().is('table')) {
+                val = $elem.parent().attr('data-base-url');
+            }
+
+            return val ? val : conf.baseUrl;
         },
 
         pageSize: function() {
