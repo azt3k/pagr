@@ -7,7 +7,7 @@
     "use strict";
 
     var pluginName = "pagr",
-        pluginVersion = "0.1.5",
+        pluginVersion = "0.1.6",
         defaults = {
             loadingSelector: 'html',
             pageLinkSelector: '.page-link',
@@ -194,7 +194,7 @@
                                         $elem.attr('data-total', newTotal);
 
                                     // append / replace
-                                    if (conf.behaviour == 'append') {
+                                    if (conf.behaviour == 'append' && to!=1) {
                                         $elem.append($replacement.children());
                                     } else {
                                         $elem.html('').append($replacement.children());
