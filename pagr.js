@@ -7,7 +7,7 @@
     "use strict";
 
     var pluginName = "pagr",
-        pluginVersion = "0.1.3",
+        pluginVersion = "0.1.5",
         defaults = {
             loadingSelector: 'html',
             pageLinkSelector: '.page-link',
@@ -185,12 +185,21 @@
                                     conf.ajaxHandler(self, data, textStatus, jqXHR);
                                 }
                                 else {
-                                    var $replacement = $($(data).find(self.selector)[self.idx]);
+
+                                    var newTotal,
+                                        $replacement = $($(data).find(self.selector)[self.idx]);
+
+                                    // apply new total if the filter has changed things
+                                    if (newTotal = $replacement.attr('data-total'))
+                                        $elem.attr('data-total', newTotal);
+
+                                    // append / replace
                                     if (conf.behaviour == 'append') {
                                         $elem.append($replacement.children());
                                     } else {
                                         $elem.html('').append($replacement.children());
                                     }
+
                                 }
 
                                 // update meta data
