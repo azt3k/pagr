@@ -1,6 +1,6 @@
 {
   "name": "pagr",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "repo": "azt3k/pagr",
   "homepage": "https://github.com/azt3k/pagr",
   "description": "A client site / ajax (backend agnostic) pagination system",

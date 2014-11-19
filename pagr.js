@@ -182,7 +182,7 @@
 
                                 // handle response
                                 if (typeof conf.ajaxHandler == 'function') {
-                                    conf.ajaxHandler(data, textStatus, jqXHR);
+                                    conf.ajaxHandler(self, data, textStatus, jqXHR);
                                 }
                                 else {
                                     var $replacement = $($(data).find(self.selector)[self.idx]);

@@ -57,9 +57,9 @@ $('#container').pagr();
     baseURL: window.location.href,
     pageSize: 10,
     urlHandler: null,
-    ajaxHandler: null,
-    onBeforePage: null,
-    onAfterPage: null,
+    ajaxHandler: null,  // signature: (pagr, data, textStatus, jqXHR)
+    onBeforePage: null, // signature: (pagr)
+    onAfterPage: null,  // signature: (pagr)
 }
 ````
 
