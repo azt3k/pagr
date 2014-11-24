@@ -7,7 +7,7 @@
     "use strict";
 
     var pluginName = "pagr",
-        pluginVersion = "0.1.6",
+        pluginVersion = "0.1.7",
         defaults = {
             loadingSelector: 'html',
             pageLinkSelector: '.page-link',
@@ -105,7 +105,8 @@
                 $this.off('tap.pagr').off('click.pagr').on('tap.pagr, click.pagr', function(e) {
 
                     // prevent default
-                    e.preventDefault();
+                    var allowDefault = $this.attr('data-allow-default');
+                    if (allowDefault == undefined || !allowDefault || allowDefault == 'false') e.preventDefault();
 
                     // do nothing of the item is disabled
                     if ($this.is('.disabled')) return;
@@ -194,7 +195,7 @@
                                         $elem.attr('data-total', newTotal);
 
                                     // append / replace
-                                    if (conf.behaviour == 'append' && to!=1) {
+                                    if (conf.behaviour == 'append' && to != 1) {
                                         $elem.append($replacement.children());
                                     } else {
                                         $elem.html('').append($replacement.children());
@@ -404,5 +405,3 @@
     };
 
 })(jQuery, window, document);
-
-
