@@ -7,8 +7,9 @@
     "use strict";
 
     var pluginName = "pagr",
-        pluginVersion = "0.1.9",
+        pluginVersion = "0.1.10",
         defaults = {
+            bindTo: 'tap click change',
             loadingSelector: 'html',
             pageLinkSelector: '.page-link',
             filterFormSelector: null,
@@ -33,10 +34,10 @@
             baseURL: window.location.href,
             pageSize: 10,
             ajaxWait: 0,
-            urlHandler: null,
-            ajaxHandler: null,
-            onBeforePage: null,
-            onAfterPage: null,
+            urlHandler: null,   // (params, baseUrl)
+            ajaxHandler: null,  // (pagr, data, textStatus, jqXHR)
+            onBeforePage: null, // (pagr, event) this = the elem that triggered the event
+            onAfterPage: null,  // (pagr, event) this = the elem that triggered the event
         };
 
     function Plugin(element, idx, selector, options) {
@@ -102,11 +103,13 @@
             $(conf.pageLinkSelector).each(function(idx) {
 
                 var $this = $(this),
-                    el = this;
+                    el = this,
+                    evs = $this.attr('data-bind-to') || conf.bindTo,
+                    bindTo = evs.split(/[ ]+/).map(function(v){ return v + '.pagr' }).join(' ');
 
                 $this
-                    .off('tap.pagr click.pagr change.pagr')
-                    .on('tap.pagr click.pagr change.pagr', function(e) {
+                    .off(bindTo)
+                    .on(bindTo, function(e) {
 
                         // prevent default
                         var allowDefault = $this.attr('data-allow-default');
