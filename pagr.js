@@ -7,7 +7,7 @@
     "use strict";
 
     var pluginName = "pagr",
-        pluginVersion = "0.1.8",
+        pluginVersion = "0.1.9",
         defaults = {
             loadingSelector: 'html',
             pageLinkSelector: '.page-link',
@@ -32,6 +32,7 @@
             },
             baseURL: window.location.href,
             pageSize: 10,
+            ajaxWait: 0,
             urlHandler: null,
             ajaxHandler: null,
             onBeforePage: null,
@@ -100,13 +101,12 @@
             // attach
             $(conf.pageLinkSelector).each(function(idx) {
 
-                var $this = $(this);
+                var $this = $(this),
+                    el = this;
 
                 $this
-                    .off('tap.pagr')
-                    .off('click.pagr')
-                    .off('change.pagr')
-                    .on('tap.pagr, click.pagr, change.pagr', function(e) {
+                    .off('tap.pagr click.pagr change.pagr')
+                    .on('tap.pagr click.pagr change.pagr', function(e) {
 
                         // prevent default
                         var allowDefault = $this.attr('data-allow-default');
@@ -116,7 +116,7 @@
                         if ($this.is('.disabled')) return;
 
                         // callback
-                        if (typeof conf.onBeforePage == 'function') conf.onBeforePage(self);
+                        if (typeof conf.onBeforePage == 'function') conf.onBeforePage.call(el, self, e);
 
                         // vars
                         var url = self.baseURL(),
@@ -165,60 +165,65 @@
                             // request
                             if (conf.ajax) {
 
-                                // set page size vars
-                                qs[conf.vars.page] = to;
-                                qs[conf.vars.pageSize] = pageSize;
-                                qs[conf.vars.sortBy] = sortBy;
-                                qs[conf.vars.sortDirection] = sortDirection;
+                                // solves some issues with checkboxes
+                                setTimeout(function() {
 
-                                // extract the data from the filter form
-                                if ($filterForm = self.filterForm()) {
-                                    serialised = $filterForm.serialize().split('&');
-                                    for(i=0; i<serialised.length; i++) {
-                                        item = serialised[i].split('=');
-                                        qs[item[0]] = item[1];
+                                    // set page size vars
+                                    qs[conf.vars.page] = to;
+                                    qs[conf.vars.pageSize] = pageSize;
+                                    qs[conf.vars.sortBy] = sortBy;
+                                    qs[conf.vars.sortDirection] = sortDirection;
+
+                                    // extract the data from the filter form
+                                    if ($filterForm = self.filterForm()) {
+                                        serialised = $filterForm.serialize().split('&');
+                                        for(i=0; i<serialised.length; i++) {
+                                            item = serialised[i].split('=');
+                                            qs[item[0]] = item[1];
+                                        }
                                     }
-                                }
 
-                                // generate the url
-                                url = typeof conf.urlHandler == 'function' ? conf.urlHandler(qs, url) : $.qs(qs, url);
+                                    // generate the url
+                                    url = typeof conf.urlHandler == 'function' ? conf.urlHandler(qs, url) : $.qs(qs, url);
 
-                                $[conf.method](url, function(data, textStatus, jqXHR) {
+                                    $[conf.method](url, function(data, textStatus, jqXHR) {
 
-                                    // handle response
-                                    if (typeof conf.ajaxHandler == 'function') {
-                                        conf.ajaxHandler(self, data, textStatus, jqXHR);
-                                    }
-                                    else {
+                                        // handle response
+                                        if (typeof conf.ajaxHandler == 'function') {
+                                            conf.ajaxHandler(self, data, textStatus, jqXHR);
+                                        }
+                                        else {
 
-                                        var newTotal,
-                                            $replacement = $($(data).find(self.selector)[self.idx]);
+                                            var newTotal,
+                                                $replacement = $($(data).find(self.selector)[self.idx]);
 
-                                        // apply new total if the filter has changed things
-                                        if (newTotal = $replacement.attr('data-total'))
-                                            $elem.attr('data-total', newTotal);
+                                            // apply new total if the filter has changed things
+                                            if (newTotal = $replacement.attr('data-total'))
+                                                $elem.attr('data-total', newTotal);
 
-                                        // append / replace
-                                        if (conf.behaviour == 'append' && to != 1) {
-                                            $elem.append($replacement.children());
-                                        } else {
-                                            $elem.html('').append($replacement.children());
+                                            // append / replace
+                                            if (conf.behaviour == 'append' && to != 1) {
+                                                $elem.append($replacement.children());
+                                            } else {
+                                                $elem.html('').append($replacement.children());
+                                            }
+
                                         }
 
-                                    }
+                                        // update meta data
+                                        $elem.attr('data-page', to);
+                                        if (conf.forceFilter) self.filter();
+                                        self.attachPagination();
 
-                                    // update meta data
-                                    $elem.attr('data-page', to);
-                                    if (conf.forceFilter) self.filter();
-                                    self.attachPagination();
+                                        // callback
+                                        if (typeof conf.onAfterPage == 'function') conf.onAfterPage.call(el, self, e);
 
-                                    // callback
-                                    if (typeof conf.onAfterPage == 'function') conf.onAfterPage(self);
+                                        // loading
+                                        $(conf.loadingSelector).removeClass('loading');
 
-                                    // loading
-                                    $(conf.loadingSelector).removeClass('loading');
+                                    });
+                                }, conf.ajaxWait);
 
-                                });
                             } else {
 
                                 //  update meta data
@@ -227,7 +232,7 @@
                                 self.attachPagination();
 
                                 // callback
-                                if (typeof conf.onAfterPage == 'function') conf.onAfterPage(self);
+                                if (typeof conf.onAfterPage == 'function') conf.onAfterPage.call(el, self, e);
 
                                 // loading
                                 $(conf.loadingSelector).removeClass('loading');
