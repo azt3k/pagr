@@ -7,7 +7,7 @@
     "use strict";
 
     var pluginName = "pagr",
-        pluginVersion = "0.1.10",
+        pluginVersion = "0.1.11",
         defaults = {
             bindTo: 'tap click change',
             loadingSelector: 'html',
@@ -171,11 +171,16 @@
                                 // solves some issues with checkboxes
                                 setTimeout(function() {
 
+                                    var varPage = $elem.attr('data-var-page') || conf.vars.page,
+                                        varPageSize = $elem.attr('data-var-page-size') || conf.vars.pageSize,
+                                        varSortBy = $elem.attr('data-var-sort-by') || conf.vars.sortBy,
+                                        varSortDirection = $elem.attr('data-var-sort-direction') || conf.vars.sortDirection;
+
                                     // set page size vars
-                                    qs[conf.vars.page] = to;
-                                    qs[conf.vars.pageSize] = pageSize;
-                                    qs[conf.vars.sortBy] = sortBy;
-                                    qs[conf.vars.sortDirection] = sortDirection;
+                                    qs[varPage] = to;
+                                    qs[varPageSize] = pageSize;
+                                    qs[varSortBy] = sortBy;
+                                    qs[varSortDirection] = sortDirection;
 
                                     // extract the data from the filter form
                                     if ($filterForm = self.filterForm()) {
