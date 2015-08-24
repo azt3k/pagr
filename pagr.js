@@ -7,7 +7,7 @@
     "use strict";
 
     var pluginName = "pagr",
-        pluginVersion = "0.1.11",
+        pluginVersion = "0.2.0",
         defaults = {
             bindTo: 'tap click change',
             loadingSelector: 'html',
