@@ -23,8 +23,8 @@
             },
             forceFilter: false,
             ajax: false,
-            method: 'get', // get / post
-            behaviour: 'replace', // append / replace
+            method: 'get',                  // get / post
+            behaviour: 'replace',           // append / replace
             vars: {
                 sortDirection: 'direction',
                 sortBy: 'sort',
@@ -34,10 +34,11 @@
             baseURL: window.location.href,
             pageSize: 10,
             ajaxWait: 0,
-            urlHandler: null,   // (params, baseUrl)
-            ajaxHandler: null,  // (pagr, data, textStatus, jqXHR)
-            onBeforePage: null, // (pagr, event) this = the elem that triggered the event
-            onAfterPage: null,  // (pagr, event) this = the elem that triggered the event
+            urlHandler: null,               // (params, baseUrl)
+            requestNotifier: null,          // (pagr, requestUrl, params, baseUrl)
+            ajaxHandler: null,              // (pagr, data, textStatus, jqXHR)
+            onBeforePage: null,             // (pagr, event) this = the elem that triggered the event
+            onAfterPage: null,              // (pagr, event) this = the elem that triggered the event
         };
 
     function Plugin(element, idx, selector, options) {
@@ -192,9 +193,13 @@
                                     }
 
                                     // generate the url
-                                    url = typeof conf.urlHandler == 'function' ? conf.urlHandler(qs, url) : $.qs(qs, url);
+                                    var requestUrl = typeof conf.urlHandler == 'function' ? conf.urlHandler(qs, url) : $.qs(qs, url);
 
-                                    $[conf.method](url, function(data, textStatus, jqXHR) {
+                                    // request notifier
+                                    if (typeof conf.requestNotifier == 'function') conf.requestNotifier(self, requestUrl, qs, url);
+
+                                    // ajax request
+                                    $[conf.method](requestUrl, function(data, textStatus, jqXHR) {
 
                                         // handle response
                                         if (typeof conf.ajaxHandler == 'function') {
