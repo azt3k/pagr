@@ -18,7 +18,7 @@
    $(function() {
 
         var pluginName = "pagr",
-            pluginVersion = "0.3.0",
+            pluginVersion = "0.4.0",
             defaults = {
                 bindTo: 'tap click change',
                 loadingSelector: 'html',
