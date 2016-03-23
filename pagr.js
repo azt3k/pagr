@@ -18,7 +18,7 @@
    $(function() {
 
         var pluginName = "pagr",
-            pluginVersion = "0.4.1",
+            pluginVersion = "0.4.2",
             defaults = {
                 bindTo: 'tap click change',
                 loadingSelector: 'html',
@@ -117,7 +117,16 @@
                     var $this = $(this),
                         el = this,
                         evs = $this.attr('data-bind-to') || conf.bindTo,
-                        bindTo = evs.split(/[ ]+/).map(function(v){ return v + '.pagr' }).join(' ');
+                        bindTo = evs.split(/[ ]+/).map(function(v){ return v + '.pagr' }).join(' '),
+                        currentPage = self.currentPage(),
+                        pageJump = $this.attr('data-page') ? $this.attr('data-page') : 1,
+                        max = self.getMax(),
+                        to = self.parsePageJump(pageJump, currentPage, max);
+
+                    // disable the next button if we've hit the limit
+                    // we could prob extend this to also work with last / max (i.e anything other than first or 1)
+                    // because often first or one would be used to rest the paging for filtering
+                    $this.toggleClass('disabled', (currentPage == max && pageJump == 'next'));
 
                     $this
                         .off(bindTo)
@@ -156,27 +165,7 @@
                                 $(conf.loadingSelector).addClass('loading');
 
                                 // target page to load
-                                switch(pageJump) {
-
-                                    case 'first':
-                                        to = 1;
-                                        break;
-
-                                    case 'next':
-                                        to = currentPage + 1 > max ? max : currentPage + 1;
-                                        break;
-
-                                    case 'prev':
-                                        to = currentPage - 1 < 1 ? 1 : currentPage - 1;
-                                        break;
-
-                                    case 'last':
-                                        to = max;
-                                        break;
-
-                                    default:
-                                        to = parseInt(pageJump);
-                                }
+                                to = self.parsePageJump(pageJump, currentPage, max);
 
                                 // request
                                 if (conf.ajax) {
@@ -264,6 +253,35 @@
                         });
                 });
 
+            },
+
+            parsePageJump: function(pageJump, currentPage, max) {
+
+                var to;
+
+                switch(pageJump) {
+
+                    case 'first':
+                        to = 1;
+                        break;
+
+                    case 'next':
+                        to = currentPage + 1 > max ? max : currentPage + 1;
+                        break;
+
+                    case 'prev':
+                        to = currentPage - 1 < 1 ? 1 : currentPage - 1;
+                        break;
+
+                    case 'last':
+                        to = max;
+                        break;
+
+                    default:
+                        to = parseInt(pageJump);
+                }
+
+                return to;
             },
 
             getMax: function() {
