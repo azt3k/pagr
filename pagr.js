@@ -143,6 +143,7 @@
                                 total = self.getTotal(),
                                 max = self.getMax(),
                                 qs = {},
+                                params = {},
                                 to,
                                 $filterForm,
                                 serialised,
@@ -196,11 +197,8 @@
 
                                         // extract the data from the filter form
                                         if ($filterForm = self.filterForm()) {
-                                            serialised = $filterForm.serialize().split('&');
-                                            for(i=0; i<serialised.length; i++) {
-                                                item = serialised[i].split('=');
-                                                qs[item[0]] = item[1];
-                                            }
+                                            params = $.q2obj($filterForm.serialize());
+                                            $.extend(qs,params);
                                         }
 
                                         // generate the url
@@ -301,14 +299,17 @@
 
                 var $elem = this.$element,
                     conf = this.settings,
-                    val = $elem.attr('data-base-url');
+                    val = $elem.attr('data-base-url'),
+                    baseURL;
 
                 // see if we have a base url defined on the parent (tablizr)
                 if (!val && $elem.parent().is('table')) {
                     val = $elem.parent().attr('data-base-url');
                 }
 
-                return val ? val : conf.baseUrl;
+                baseURL = val ? val : conf.baseUrl;
+
+                return baseURL ? baseURL : window.location.href;
             },
 
             pageSize: function() {
@@ -389,6 +390,36 @@
             }
         };
 
+        $.q2obj = function(query) {
+
+            if (query == '') return null;
+
+            var hash = {},
+                vars = query.split("&");
+
+            for (var i = 0; i < vars.length; i++) {
+
+                var pair = vars[i].split("="),
+                    k = decodeURIComponent(pair[0]),
+                    v = decodeURIComponent(pair[1]);
+
+                // If it is the first entry with this name
+                if (typeof hash[k] === "undefined") {
+
+                    // not end with []. cannot use negative index as IE doesn't understand it
+                    if (k.substr(k.length - 2) != '[]') hash[k] = v;
+                    else hash[k] = [v];
+                }
+
+                // If subsequent entry with this name and not array replace it
+                else if (typeof hash[k] === "string") hash[k] = v;
+
+                // If subsequent entry with this name and is array
+                else hash[k].push(v);
+            }
+            return hash;
+        }
+
         $.q = function (key, value, url) {
 
             if (!url) url = window.location.href;
@@ -419,14 +450,22 @@
                 else
                     return url;
             }
-        }
+        };
 
-        $.qs = function (conf, url) {
-            for (var i in conf) {
-                url = $.q(i, conf[i], url);
-            }
-            return url;
-        }
+        $.qs = function (conf, url, deep) {
+
+            // default merge to false
+            deep = deep || false;
+
+            // build all the parts
+            var urlBase = url.split('?')[0] || url,
+                urlQ = url.split('?')[1] || '',
+                urlObj = $.q2obj(urlQ),
+                merged = deep ? $.extend(true, {}, urlObj, conf) : $.extend({}, urlObj, conf);
+
+            // return complete url
+            return urlBase + '?' + $.param(merged);
+        };
 
         $.fn[pluginName] = function(options) {
             var selector = this.selector;
