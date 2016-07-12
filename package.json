@@ -1,6 +1,6 @@
 {
   "name": "pagr",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "A client site / ajax (backend agnostic) pagination syste",
   "main": "labelizr.js",
   "scripts": {

@@ -18,7 +18,7 @@
    $(function() {
 
         var pluginName = "pagr",
-            pluginVersion = "0.4.2",
+            pluginVersion = "0.5.0",
             defaults = {
                 bindTo: 'tap click change',
                 loadingSelector: 'html',
@@ -48,6 +48,7 @@
                 urlHandler: null,               // (params, baseUrl)
                 requestNotifier: null,          // (pagr, requestUrl, params, baseUrl)
                 ajaxHandler: null,              // (pagr, data, textStatus, jqXHR)
+                onInit: null,                   // (pagr, event) this = the elem that triggered the event
                 onBeforePage: null,             // (pagr, event) this = the elem that triggered the event
                 onAfterPage: null,              // (pagr, event) this = the elem that triggered the event
             };
@@ -126,7 +127,7 @@
                     // disable the next button if we've hit the limit
                     // we could prob extend this to also work with last / max (i.e anything other than first or 1)
                     // because often first or one would be used to rest the paging for filtering
-                    $this.toggleClass('disabled', (currentPage == max && pageJump == 'next'));
+                    $this.toggleClass('disabled', ((currentPage == max || max == 0) && pageJump == 'next'));
 
                     $this
                         .off(bindTo)
@@ -252,6 +253,9 @@
 
                         });
                 });
+
+                // life cycle callback
+                if (typeof conf.onInit == 'function') conf.onInit.call($elem[0], this);
 
             },
 
