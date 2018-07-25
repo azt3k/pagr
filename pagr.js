@@ -22,6 +22,7 @@
             defaults = {
                 bindTo: 'tap click change',
                 loadingSelector: 'html',
+                loadingClass: 'loading',
                 pageLinkSelector: '.page-link',
                 filterFormSelector: null,
                 pager: {
@@ -160,10 +161,10 @@
                                 item,
                                 i;
 
-                            if (!$(conf.loadingSelector).is('.loading')) {
+                            if (!$(conf.loadingSelector).is('.' + conf.loadingClass)) {
 
                                 // loading
-                                $(conf.loadingSelector).addClass('loading');
+                                $(conf.loadingSelector).addClass(conf.loadingClass);
 
                                 // target page to load
                                 to = self.parsePageJump(pageJump, currentPage, max);
@@ -231,7 +232,7 @@
                                             if (typeof conf.onAfterPage == 'function') conf.onAfterPage.call(el, self, e);
 
                                             // loading
-                                            $(conf.loadingSelector).removeClass('loading');
+                                            $(conf.loadingSelector).removeClass(conf.loadingClass);
 
                                         });
                                     }, conf.ajaxWait);
@@ -247,7 +248,7 @@
                                     if (typeof conf.onAfterPage == 'function') conf.onAfterPage.call(el, self, e);
 
                                     // loading
-                                    $(conf.loadingSelector).removeClass('loading');
+                                    $(conf.loadingSelector).removeClass(conf.loadingClass);
                                 }
                             }
 
