@@ -31,9 +31,10 @@ $('#container').pagr();
 ### Options / Defaults
 
 
-````json
+````js
 {
     loadingSelector: 'html',
+    loadingClass: 'loading',
     pageLinkSelector: '.page-link',
     filterFormSelector: null,
     pager: {
