@@ -1,4 +1,4 @@
 #!/bin/bash
 
-OUTPUT=$(uglifyjs pagr.js -m -r '$,require,exports')
+OUTPUT=$(node_modules/.bin/uglifyjs pagr.js -m -r '$,require,exports')
 echo ";$OUTPUT" > pagr.min.js

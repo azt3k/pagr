@@ -18,12 +18,13 @@
    $(function() {
 
         var pluginName = "pagr",
-            pluginVersion = "0.5.0",
+            pluginVersion = "0.6.0",
             defaults = {
                 bindTo: 'tap click change',
                 loadingSelector: 'html',
                 loadingClass: 'loading',
                 pageLinkSelector: '.page-link',
+                disabledClass: 'disabled',
                 filterFormSelector: null,
                 pager: {
                     class: 'page-link',
@@ -58,7 +59,11 @@
             this.$element = $(element);
             this.idx = idx;
             this.selector = selector;
-            this.settings = $.extend(true, {}, defaults, options);
+            this.selector = selector || this.settings.selector; // selector was removed in jq 3.0
+            
+            if (!this.selector || this.selector == undefined)
+                throw "selector option must be supplied in jQuery 3+"
+
             this.init();
         }
 
@@ -128,7 +133,10 @@
                     // disable the next button if we've hit the limit
                     // we could prob extend this to also work with last / max (i.e anything other than first or 1)
                     // because often first or one would be used to rest the paging for filtering
-                    $this.toggleClass('disabled', ((currentPage == max || max == 0) && pageJump == 'next'));
+                    $this.toggleClass(
+                        conf.disabledClass,
+                        ((currentPage >= max || max == 0) && pageJump == 'next')
+                    );
 
                     $this
                         .off(bindTo)
@@ -136,13 +144,15 @@
 
                             // prevent default
                             var allowDefault = $this.attr('data-allow-default');
-                            if (allowDefault == undefined || !allowDefault || allowDefault == 'false') e.preventDefault();
+                            if (allowDefault == undefined || !allowDefault || allowDefault == 'false')
+                                e.preventDefault();
 
                             // do nothing of the item is disabled
                             if ($this.is('.disabled')) return;
 
                             // callback
-                            if (typeof conf.onBeforePage == 'function') conf.onBeforePage.call(el, self, e);
+                            if (typeof conf.onBeforePage == 'function')
+                                conf.onBeforePage.call(el, self, e);
 
                             // vars
                             var url = self.baseURL(),
@@ -193,10 +203,13 @@
                                         }
 
                                         // generate the url
-                                        var requestUrl = typeof conf.urlHandler == 'function' ? conf.urlHandler(qs, url) : $.qs(qs, url);
+                                        var requestUrl = typeof conf.urlHandler == 'function'
+                                            ? conf.urlHandler(qs, url)
+                                            : $.qs(qs, url);
 
                                         // request notifier
-                                        if (typeof conf.requestNotifier == 'function') conf.requestNotifier(self, requestUrl, qs, url);
+                                        if (typeof conf.requestNotifier == 'function')
+                                            conf.requestNotifier(self, requestUrl, qs, url);
 
                                         // ajax request
                                         $[conf.method](requestUrl, function(data, textStatus, jqXHR) {
@@ -208,11 +221,11 @@
                                             else {
 
                                                 var newTotal,
-                                                    $replacement = $($(data).find(self.selector)[self.idx]);
+                                                    $replacement = $($(data).find(self.selector)[self.idx]),
+                                                    newTotal = $replacement.attr('data-total') || 0;
 
                                                 // apply new total if the filter has changed things
-                                                if (newTotal = $replacement.attr('data-total'))
-                                                    $elem.attr('data-total', newTotal);
+                                                $elem.attr('data-total', newTotal);
 
                                                 // append / replace
                                                 if (conf.behaviour == 'append' && to != 1) {
@@ -220,7 +233,6 @@
                                                 } else {
                                                     $elem.html('').append($replacement.children());
                                                 }
-
                                             }
 
                                             // update meta data
@@ -229,7 +241,8 @@
                                             self.attachPagination();
 
                                             // callback
-                                            if (typeof conf.onAfterPage == 'function') conf.onAfterPage.call(el, self, e);
+                                            if (typeof conf.onAfterPage == 'function')
+                                                conf.onAfterPage.call(el, self, e);
 
                                             // loading
                                             $(conf.loadingSelector).removeClass(conf.loadingClass);
@@ -245,7 +258,8 @@
                                     self.attachPagination();
 
                                     // callback
-                                    if (typeof conf.onAfterPage == 'function') conf.onAfterPage.call(el, self, e);
+                                    if (typeof conf.onAfterPage == 'function')
+                                        conf.onAfterPage.call(el, self, e);
 
                                     // loading
                                     $(conf.loadingSelector).removeClass(conf.loadingClass);
@@ -256,7 +270,8 @@
                 });
 
                 // life cycle callback
-                if (typeof conf.onInit == 'function') conf.onInit.call($elem[0], this);
+                if (typeof conf.onInit == 'function')
+                    conf.onInit.call($elem[0], this);
 
             },
 
@@ -374,8 +389,8 @@
                     max = this.getMax();
 
                 pager = '<div id="' + id + '-wrap" class="pagr-wrap">' +
-                        (conf.pager.first ? '<a class="' + cls + (currentPage == 1 ? ' disabled' : '') + '" data-page="first">First</a>' : '') +
-                        (conf.pager.prev  ? '<a class="' + cls + (currentPage == 1 ? ' disabled' : '') + '" data-page="prev">Prev</a>' : '');
+                        (conf.pager.first ? '<a class="' + cls + (currentPage == 1 ? ' ' + conf.disabledClass : '') + '" data-page="first">First</a>' : '') +
+                        (conf.pager.prev  ? '<a class="' + cls + (currentPage == 1 ? ' ' + conf.disabledClass : '') + '" data-page="prev">Prev</a>' : '');
 
                 if (conf.pager.range) {
                     for (i = -conf.pager.range; i <= conf.pager.range; i++) {
@@ -384,8 +399,8 @@
                     }
                 }
 
-                pager+= (conf.pager.next ? '<a class="' + cls + (currentPage == max ? ' disabled' : '') + '" data-page="next">Next</a>' : '') +
-                        (conf.pager.last ? '<a class="' + cls + (currentPage == max ? ' disabled' : '') + '" data-page="last">Last</a>' : '') +
+                pager+= (conf.pager.next ? '<a class="' + cls + (currentPage == max ? ' ' + conf.disabledClass : '') + '" data-page="next">Next</a>' : '') +
+                        (conf.pager.last ? '<a class="' + cls + (currentPage == max ? ' ' + conf.disabledClass : '') + '" data-page="last">Last</a>' : '') +
                         '</div>';
 
                 return pager;
