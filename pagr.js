@@ -18,7 +18,7 @@
    $(function() {
 
         var pluginName = "pagr",
-            pluginVersion = "0.6.0",
+            pluginVersion = "0.6.1",
             defaults = {
                 bindTo: 'tap click change',
                 loadingSelector: 'html',
@@ -58,7 +58,7 @@
         function Plugin(element, idx, selector, options) {
             this.$element = $(element);
             this.idx = idx;
-            this.selector = selector;
+            this.settings = $.extend(true, {}, defaults, options);
             this.selector = selector || this.settings.selector; // selector was removed in jq 3.0
             
             if (!this.selector || this.selector == undefined)
@@ -148,7 +148,7 @@
                                 e.preventDefault();
 
                             // do nothing of the item is disabled
-                            if ($this.is('.disabled')) return;
+                            if ($this.is('.' + conf.disabledClass)) return;
 
                             // callback
                             if (typeof conf.onBeforePage == 'function')
