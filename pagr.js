@@ -19,7 +19,7 @@
     $(function () {
 
         var pluginName = "pagr",
-            pluginVersion = "0.6.3",
+            pluginVersion = "0.6.4",
             defaults = {
                 bindTo: 'tap click change',
                 loadingSelector: 'html',
@@ -335,7 +335,7 @@
 
             sortDirection: function () {
                 var $elem = this.$element;
-                return $elem.attr('data-sort-direction') == 'desc' ? 'desc' : 'asc';
+                return $elem.attr('data-sort-direction').toLowerCase() == 'desc' ? 'desc' : 'asc';
             },
 
             baseURL: function () {
