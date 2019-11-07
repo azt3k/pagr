@@ -334,8 +334,8 @@
             },
 
             sortDirection: function () {
-                var $elem = this.$element;
-                return $elem.attr('data-sort-direction').toLowerCase() == 'desc' ? 'desc' : 'asc';
+                var direction = this.$element.attr('data-sort-direction');
+                return direction && direction.toLowerCase() == 'desc' ? 'desc' : 'asc';
             },
 
             baseURL: function () {
