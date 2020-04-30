@@ -14,7 +14,7 @@
     "uglify-js": "3.6.0"
   },
   "dependencies": {
-    "jquery": ">=1.11.1"
+    "jquery": ">=3.5.0"
   },
   "keywords": [
     "height",
