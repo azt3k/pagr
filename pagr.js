@@ -335,7 +335,7 @@
 
             sortDirection: function () {
                 var $elem = this.$element;
-                return $elem.attr('data-sort-direction').toLowerCase() == 'desc' ? 'desc' : 'asc';
+                return ($elem.attr('data-sort-direction') || '').toLowerCase() == 'desc' ? 'desc' : 'asc';
             },
 
             baseURL: function () {
